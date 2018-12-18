@@ -1,9 +1,137 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-	<head>
-		<title>00000</title>
-	</head>
-	<body>
-		<p>the Rainbow is here</p>
-	</body>
+
+<head>
+	<title>00000</title>
+	<script src='https://d3js.org/d3.v4.min.js'></script>
+	<script>
+		var NUMCIRCLES = 13;
+		var TAU = 2 * Math.PI;
+		var angStep = TAU / NUMCIRCLES;
+		
+		var HEIGHT = 800;
+		var WIDTH = HEIGHT;
+		var worldCenter = HEIGHT / 2;
+		
+		var radius = 50;
+		var worldRadius = worldCenter - radius;
+		var theColor = "steelblue";
+
+		window.addEventListener("DOMContentLoaded",function(event) {
+			/*This sets up the initial view of the circles inside the main div*/
+			/*The part with the "g" sets up a group where the coordinate origin is in the middle of the svg */
+			var svg = d3.select("#canvas")
+				.append("svg")
+				.attr("width", WIDTH)
+				.attr("height", HEIGHT)
+				.attr("id","theWorld")
+				.append("g")
+					.attr("transform", "translate(" + WIDTH / 2 + "," + HEIGHT / 2 + ")")
+				;
+			
+			/* Add a circle that connects the personalities */
+			var greatCircle = svg.append("circle")
+				.attr("cx",0)
+				.attr("cy",0)
+				.attr("r",worldRadius)
+				.attr("stroke","white")
+				.attr("stroke-width",3)
+				.attr("fill","none")
+				;
+				
+			/* Add a circle button in the middle.  This is used as a 1-time trigger*/
+			var greatCircle = svg.append("circle")
+				.attr("cx",0)
+				.attr("cy",0)
+				.attr("r",50)
+				.attr("stroke","white")
+				.attr("stroke-width",3)
+				.attr("fill","red")
+				.attr("stroke","white")
+				.attr("stroke-width",3)
+				.attr("stroke-dasharray",("10,3"))
+				.attr("id","theButton")
+				.attr("onclick","moveThem()")
+				;
+
+			/* Add a circle for each personality.  Need the negative sign in  cy because y=0 is at top */
+			for (var i = 0; i < NUMCIRCLES; i++ ) {
+				svg.append("circle")
+					.attr("cx",worldRadius*Math.sin(i*angStep))
+					.attr("cy",-1*worldRadius*Math.cos(i*angStep))
+					.attr("r",radius)
+					.attr("fill",theColor)
+					.attr("class","orbs")
+					.attr("stroke","white")
+					.attr("stroke-width",3)
+					.attr("stroke-dasharray",("10,3"))
+					;
+			}
+
+
+			console.log(event);
+		});
+	
+		
+	/*	window.addEventListener("click",function(event) { */
+	
+		function moveThem() {
+		
+			/* I only want this to run once, so remove the listener from the button */
+			
+			if (theColor == "steelblue") {
+				theColor = "red";
+			} else {
+				theColor = "steelblue";
+			}
+			
+			var oldButton = document.getElementById("theButton");
+			oldButton
+				.removeAttribute("onclick")
+				;
+		
+			var button = d3.select("#theButton");
+			button
+				.transition("removeButton")
+				.duration(2000)
+				.attr("r",0)
+				.attrTween("transform",function(d,i,a){return d3.interpolateString("rotate(0)","rotate(360)")})
+				.remove()
+			;
+			
+			var circles = d3.select("#theWorld").selectAll(".orbs");
+			circles
+				.transition("colorShift")
+				.duration(function(d,i){return 2000+8000*Math.random()})
+				.attr("fill",theColor)
+				;
+				
+			circles
+				.transition("sizeShift")
+				.duration(function(d,i){return 2000+8000*Math.random()})
+				.attr("r",20)
+				.transition()
+				.duration(2000)
+				.attr("r",50)
+				;
+				
+			circles.transition("positionShift")
+				.duration(function(d,i){return 2000+8000*Math.random()})
+				.attrTween("transform",function(d,i,a){return d3.interpolateString("rotate(0)","rotate("+360*Math.pow(-1,i)+")")})
+				;
+
+		};
+		
+	/*	}); */
+
+	</script>
+	
+</head>
+<body style="background-color: black">
+
+<div id="canvas" style="text-align:center">
+</div>
+
+</body>
+
 </html>
