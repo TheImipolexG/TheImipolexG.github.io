@@ -5,7 +5,7 @@
 	<title>00000</title>
 	<script src='https://d3js.org/d3.v4.min.js'></script>
 	<script>
-		var NUMCIRCLES = 13;
+		var NUMCIRCLES = 11;
 		var TAU = 2 * Math.PI;
 		var angStep = TAU / NUMCIRCLES;
 		
@@ -16,6 +16,40 @@
 		var radius = 50;
 		var worldRadius = worldCenter - radius;
 		var theColor = "steelblue";
+
+		var orbAnglesStart = [];
+		var orbAnglesEnd = [];
+		var orbAnglesDiff = [];
+
+		var orbStartX = [];
+		var orbStartY = [];	
+		
+		var orbEndX = [];
+		var orbEndY = [];
+		
+		for (var i=0; i<NUMCIRCLES ; i++) {
+			orbAnglesStart.push(i*TAU/NUMCIRCLES); /* in radians */
+		}
+		for (var i=1; i<=NUMCIRCLES ; i++) {
+			orbAnglesEnd.push(orbAnglesStart[NUMCIRCLES-i]);  /* in radians */
+		}
+		for (var i=0; i<NUMCIRCLES ; i++) {
+			orbAnglesDiff.push((orbAnglesEnd[i]-orbAnglesStart[i])/Math.PI*180); /*in degrees */
+		}
+		
+		var spiralCounter = 0;
+		
+		/* Calculate initial x,y positions for the orbs and the avatars */
+		/* Usually the Sin and Cos are reversed, but I want the first element at the top so adding pi/2 for a quarter turn */
+		for (var i=0; i<NUMCIRCLES ; i++) {
+			orbStartX.push(worldRadius*Math.sin(orbAnglesStart[i]));
+			orbStartY.push(-1*worldRadius*Math.cos(orbAnglesStart[i]));			
+		}
+		for (var i=0; i<NUMCIRCLES ; i++) {
+			orbEndX.push(worldRadius*Math.sin(orbAnglesEnd[i]));
+			orbEndY.push(-1*worldRadius*Math.cos(orbAnglesEnd[i]));			
+		}
+		
 
 		window.addEventListener("DOMContentLoaded",function(event) {
 			/*This sets up the initial view of the circles inside the main div*/
@@ -50,15 +84,15 @@
 				.attr("stroke","white")
 				.attr("stroke-width",3)
 				.attr("stroke-dasharray",("10,3"))
-				.attr("id","theButton")
 				.attr("onclick","moveThem()")
+				.attr("id","theTrigger")
 				;
-
+			
 			/* Add a circle for each personality.  Need the negative sign in  cy because y=0 is at top */
 			for (var i = 0; i < NUMCIRCLES; i++ ) {
 				svg.append("circle")
-					.attr("cx",worldRadius*Math.sin(i*angStep))
-					.attr("cy",-1*worldRadius*Math.cos(i*angStep))
+					.attr("cx",orbStartX[i])
+					.attr("cy",orbStartY[i])
 					.attr("r",radius)
 					.attr("fill",theColor)
 					.attr("class","orbs")
@@ -68,62 +102,100 @@
 					;
 			}
 
+			for (var i = 0; i < NUMCIRCLES; i++ ) {
+				svg.append("g")
+					.attr("class","theFrames")
+					.append("path")
+					.attr("stroke","white")
+					.attr("stroke-width",3)
+					.attr("d","m " + orbStartX[i] + " " + orbStartY[i] + " c 1.449313,2.076044 -2.083426,2.977892 -3.450521,2.408853 -3.704745,-1.542058 -3.4465,-6.592608 -1.367186,-9.309896 3.719405,-4.86059 11.018317,-4.209884 15.169271,-0.325517 6.091692,5.700463 5.007777,15.508358 -0.71615,21.028645 -7.629094,7.357675 -20.0218,5.821087 -26.888021,-1.757818 -8.640439,-9.537277 -6.642515,-24.54653 2.799486,-32.747395 11.435529,-9.932347 29.077648,-7.468673 38.606771,3.841154 11.229741,13.328239 8.297802,33.61275 -4.882822,44.466145 -15.217553,12.530674 -38.150514,9.128916 -50.32552,-5.92449 -13.8340161,-17.104636 -9.9614157,-42.690144 6.966157,-56.184895 18.990179,-15.1390701 47.231137,-10.7949193 62.04427,8.007826 16.445385,20.874611 11.629176,51.773152 -9.049493,67.903644")
+					.attr("fill-opacity","0")
+					.attr("class","spirals")
+			}
 
 			console.log(event);
-		});
+		}); /* end of the stuff that runs after the DOM is loaded */
 	
-		
-	/*	window.addEventListener("click",function(event) { */
-	
+
+			
 		function moveThem() {
-		
-			/* I only want this to run once, so remove the listener from the button */
-			
-			if (theColor == "steelblue") {
-				theColor = "red";
-			} else {
-				theColor = "steelblue";
-			}
-			
-			var oldButton = document.getElementById("theButton");
+		/* I only want this to run once, so remove the listener from the button */
+
+			var oldButton = document.getElementById("theTrigger");
 			oldButton
 				.removeAttribute("onclick")
 				;
 		
-			var button = d3.select("#theButton");
+		/* Now remove the trigger circle with an animation */
+			var button = d3.select("#theTrigger");
 			button
 				.transition("removeButton")
-				.duration(2000)
+				.duration(5000)
 				.attr("r",0)
 				.attrTween("transform",function(d,i,a){return d3.interpolateString("rotate(0)","rotate(360)")})
 				.remove()
 			;
-			
-			var circles = d3.select("#theWorld").selectAll(".orbs");
-			circles
+
+			var orbs    = d3.select("#theWorld").selectAll(".orbs");
+		/* Shift the color of the orbs */
+			orbs
 				.transition("colorShift")
 				.duration(function(d,i){return 2000+8000*Math.random()})
-				.attr("fill",theColor)
+				.attr("fill","red")
 				;
-				
-			circles
-				.transition("sizeShift")
+		/* Shift the size of the orbs */
+			orbs
+				.transition("shrinkOrbs")
 				.duration(function(d,i){return 2000+8000*Math.random()})
 				.attr("r",20)
-				.transition()
+				.transition("growOrbs")
 				.duration(2000)
 				.attr("r",50)
 				;
-				
-			circles.transition("positionShift")
+		/* Shift the position of the orbs and spirals*/
+			orbs
+				.transition("rotateOrbs")
 				.duration(function(d,i){return 2000+8000*Math.random()})
-				.attrTween("transform",function(d,i,a){return d3.interpolateString("rotate(0)","rotate("+360*Math.pow(-1,i)+")")})
+				.attrTween("transform",function(d,i,a){return d3.interpolateString("rotate(0)","rotate(-360)")})
+				;
+		/* Now shift the color back */
+			orbs
+				.transition("delayOnly")
+				.duration(11000)
+				.transition("recolorOrbs")
+				.duration(2000)
+				.attr("fill","steelblue")
+				.transition("fadeOut")
+				.duration(2000)
+				/*.attrTween("stroke",function(d) {return d3.interpolateString("white","steelblue")}) */
+				/*.attr("stroke-dasharray",function(d) {return d3.interpolateString("10,3","0,0")}) */
+				.attrTween("fill-opacity",function(d) {return d3.interpolateNumber(1,0)})				
+				.attrTween("opacity",function(d) {return d3.interpolateNumber(1,0)})				
 				;
 
-		};
-		
-	/*	}); */
+				
+			var myFrames = d3.select("#theWorld").selectAll(".theFrames");
+			myFrames
+				.transition("rotateFrames")
+				.duration(function(d,i){return 2000+8000*Math.random()})
+				.attrTween("transform", function(d,i){return d3.interpolateString("rotate(0)","rotate("+(orbAnglesDiff[i]+360)+")")})
+				.on("end", function() {
+					spiralCounter++;
+					if (spiralCounter==NUMCIRCLES) {
+						var spirals = d3.select("#theWorld").selectAll(".spirals");
+						spirals
+							.transition()
+							.duration(2000)
+							.attrTween("transform",function(d,i){return d3.interpolateString("rotate(0,"+orbStartX[i]+","+orbStartY[i]+")","rotate("+(-1*+(orbAnglesDiff[i]))+","+orbStartX[i]+","+orbStartY[i]+")")})
+							;
+					}
+					}
+				)
+				;
+		}
 
+
+		
 	</script>
 	
 </head>
