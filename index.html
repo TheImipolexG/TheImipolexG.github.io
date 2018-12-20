@@ -14,29 +14,29 @@
 		var worldCenter = HEIGHT / 2;
 		
 		var radius = 50;
-		var worldRadius = worldCenter - radius;
+		var worldRadius = worldCenter - radius - 5;
 		var theColor = "steelblue";
 
-		var orbAnglesStart = [];
-		var orbAnglesEnd = [];
-		var orbAnglesDiff = [];
 
 		var orbStartX = [];
 		var orbStartY = [];	
 		
 		var orbEndX = [];
 		var orbEndY = [];
-		
+
+		var orbAnglesStart = [];
 		for (var i=0; i<NUMCIRCLES ; i++) {
 			orbAnglesStart.push(i*TAU/NUMCIRCLES); /* in radians */
 		}
-		for (var i=1; i<=NUMCIRCLES ; i++) {
-			orbAnglesEnd.push(orbAnglesStart[NUMCIRCLES-i]);  /* in radians */
-		}
+		orbAnglesStart = shuffleArray(orbAnglesStart);
+			
+		var orbAnglesEnd = shuffleArray(orbAnglesStart.slice());
+
+		var orbAnglesDiff = [];
 		for (var i=0; i<NUMCIRCLES ; i++) {
 			orbAnglesDiff.push((orbAnglesEnd[i]-orbAnglesStart[i])/Math.PI*180); /*in degrees */
 		}
-		
+
 		var spiralCounter = 0;
 		
 		/* Calculate initial x,y positions for the orbs and the avatars */
@@ -68,18 +68,16 @@
 				.attr("cx",0)
 				.attr("cy",0)
 				.attr("r",worldRadius)
-				.attr("stroke","white")
+				.attr("stroke","steelblue")
 				.attr("stroke-width",3)
 				.attr("fill","none")
 				;
 				
-			/* Add a circle button in the middle.  This is used as a 1-time trigger*/
+			/* Add a circle button in the middle.  This is used as a one-time trigger*/
 			var greatCircle = svg.append("circle")
 				.attr("cx",0)
 				.attr("cy",0)
 				.attr("r",50)
-				.attr("stroke","white")
-				.attr("stroke-width",3)
 				.attr("fill","red")
 				.attr("stroke","white")
 				.attr("stroke-width",3)
@@ -102,6 +100,7 @@
 					;
 			}
 
+			/* Here come the personalities */
 			for (var i = 0; i < NUMCIRCLES; i++ ) {
 				svg.append("g")
 					.attr("class","theFrames")
@@ -115,8 +114,18 @@
 
 			console.log(event);
 		}); /* end of the stuff that runs after the DOM is loaded */
-	
 
+		
+		/* Got this shuffle routine from stackexchange */
+		function shuffleArray(array) {
+			for (let i = array.length - 1; i > 0; i--) {
+				let j = Math.floor(Math.random() * (i + 1));
+				let temp = array[i];
+				array[i] = array[j];
+				array[j] = temp;
+			}
+			return array;
+		}
 			
 		function moveThem() {
 		/* I only want this to run once, so remove the listener from the button */
@@ -170,7 +179,8 @@
 				/*.attrTween("stroke",function(d) {return d3.interpolateString("white","steelblue")}) */
 				/*.attr("stroke-dasharray",function(d) {return d3.interpolateString("10,3","0,0")}) */
 				.attrTween("fill-opacity",function(d) {return d3.interpolateNumber(1,0)})				
-				.attrTween("opacity",function(d) {return d3.interpolateNumber(1,0)})				
+				.attrTween("opacity",function(d) {return d3.interpolateNumber(1,0)})
+				.remove()
 				;
 
 				
@@ -200,7 +210,10 @@
 	
 </head>
 <body style="background-color: black">
-
+<br />
+<br />
+<br />
+<br />
 <div id="canvas" style="text-align:center">
 </div>
 
