@@ -4,8 +4,11 @@
 <head>
 	<title>00000</title>
 	<script src='https://d3js.org/d3.v4.min.js'></script>
+	<script type="text/javascript" src="moveOrbs.js"></script>
+	<script type="text/javascript" src="utilities.js"></script>
+	
 	<script>
-		var NUMCIRCLES = 11;
+		var NUMCIRCLES = 12;
 		var TAU = 2 * Math.PI;
 		var angStep = TAU / NUMCIRCLES;
 		
@@ -14,46 +17,45 @@
 		var worldCenter = HEIGHT / 2;
 		
 		var radius = 50;
-		var worldRadius = worldCenter - radius - 5;
+		var greatRadius = worldCenter - radius - 5;
 		var theColor = "steelblue";
-
 
 		var orbStartX = [];
 		var orbStartY = [];	
-		
 		var orbEndX = [];
 		var orbEndY = [];
 
-		var orbAnglesStart = [];
+		var anglesList = [];
 		for (var i=0; i<NUMCIRCLES ; i++) {
-			orbAnglesStart.push(i*TAU/NUMCIRCLES); /* in radians */
+			anglesList.push(i*TAU/NUMCIRCLES); /* in radians */
 		}
-		orbAnglesStart = shuffleArray(orbAnglesStart);
-			
-		var orbAnglesEnd = shuffleArray(orbAnglesStart.slice());
-
+		
+		var orbAnglesStart = shuffleArray(anglesList.slice());
+		var orbAnglesEnd   = shuffleArray(anglesList.slice());
 		var orbAnglesDiff = [];
 		for (var i=0; i<NUMCIRCLES ; i++) {
-			orbAnglesDiff.push((orbAnglesEnd[i]-orbAnglesStart[i])/Math.PI*180); /*in degrees */
+			orbAnglesDiff.push((orbAnglesEnd[i]-orbAnglesStart[i])/Math.PI*180); /*in degrees */ 
 		}
 
+		/* Calculate initial x,y positions for the orbs and the avatars */
+		/* Usually the Sin and Cos are reversed, but I want the first element at the top so adding pi/2 for a quarter turn.  Need the -1 on the y axis because y axis is upside down from "usual" convention in an svg space */
+		for (var i=0; i<NUMCIRCLES ; i++) {
+			orbStartX.push(greatRadius*Math.sin(orbAnglesStart[i]));
+			orbStartY.push(-1*greatRadius*Math.cos(orbAnglesStart[i]));			
+		}
+		for (var i=0; i<NUMCIRCLES ; i++) {
+			orbEndX.push(greatRadius*Math.sin(orbAnglesEnd[i]));
+			orbEndY.push(-1*greatRadius*Math.cos(orbAnglesEnd[i]));			
+		}
+
+		/* This is for use later on when checking whether all of the items have finished their transitions */
 		var spiralCounter = 0;
 		
-		/* Calculate initial x,y positions for the orbs and the avatars */
-		/* Usually the Sin and Cos are reversed, but I want the first element at the top so adding pi/2 for a quarter turn */
-		for (var i=0; i<NUMCIRCLES ; i++) {
-			orbStartX.push(worldRadius*Math.sin(orbAnglesStart[i]));
-			orbStartY.push(-1*worldRadius*Math.cos(orbAnglesStart[i]));			
-		}
-		for (var i=0; i<NUMCIRCLES ; i++) {
-			orbEndX.push(worldRadius*Math.sin(orbAnglesEnd[i]));
-			orbEndY.push(-1*worldRadius*Math.cos(orbAnglesEnd[i]));			
-		}
+
 		
 
 		window.addEventListener("DOMContentLoaded",function(event) {
 			/*This sets up the initial view of the circles inside the main div*/
-			/*The part with the "g" sets up a group where the coordinate origin is in the middle of the svg */
 			var svg = d3.select("#canvas")
 				.append("svg")
 				.attr("width", WIDTH)
@@ -67,7 +69,7 @@
 			var greatCircle = svg.append("circle")
 				.attr("cx",0)
 				.attr("cy",0)
-				.attr("r",worldRadius)
+				.attr("r",greatRadius)
 				.attr("stroke","steelblue")
 				.attr("stroke-width",3)
 				.attr("fill","none")
@@ -86,7 +88,7 @@
 				.attr("id","theTrigger")
 				;
 			
-			/* Add a circle for each personality.  Need the negative sign in  cy because y=0 is at top */
+			/* Add a circle for each personality */
 			for (var i = 0; i < NUMCIRCLES; i++ ) {
 				svg.append("circle")
 					.attr("cx",orbStartX[i])
@@ -100,90 +102,61 @@
 					;
 			}
 
-			/* Here come the personalities */
-			for (var i = 0; i < NUMCIRCLES; i++ ) {
+			/* Here come the personalities.  The part with the "g" sets up a group where the coordinate origin
+				is in the middle of the svg.  There is one of these groups ("theFrames") for each symbol.  This way
+				I can rotate the group and then rotate the symbols without needing to keep track of different centers
+				of rotation, etc. */
+			
+			/* These avatars are spirals */
+			for (var i = 0; i < NUMCIRCLES/3; i++ ) {
 				svg.append("g")
 					.attr("class","theFrames")
 					.append("path")
+					.attr("class","spirals")
 					.attr("stroke","white")
 					.attr("stroke-width",3)
-					.attr("d","m " + orbStartX[i] + " " + orbStartY[i] + " c 1.449313,2.076044 -2.083426,2.977892 -3.450521,2.408853 -3.704745,-1.542058 -3.4465,-6.592608 -1.367186,-9.309896 3.719405,-4.86059 11.018317,-4.209884 15.169271,-0.325517 6.091692,5.700463 5.007777,15.508358 -0.71615,21.028645 -7.629094,7.357675 -20.0218,5.821087 -26.888021,-1.757818 -8.640439,-9.537277 -6.642515,-24.54653 2.799486,-32.747395 11.435529,-9.932347 29.077648,-7.468673 38.606771,3.841154 11.229741,13.328239 8.297802,33.61275 -4.882822,44.466145 -15.217553,12.530674 -38.150514,9.128916 -50.32552,-5.92449 -13.8340161,-17.104636 -9.9614157,-42.690144 6.966157,-56.184895 18.990179,-15.1390701 47.231137,-10.7949193 62.04427,8.007826 16.445385,20.874611 11.629176,51.773152 -9.049493,67.903644")
+					.attr("d","M " + orbStartX[i] + " " + orbStartY[i] + " c 1.449313,2.076044 -2.083426,2.977892 -3.450521,2.408853 -3.704745,-1.542058 -3.4465,-6.592608 -1.367186,-9.309896 3.719405,-4.86059 11.018317,-4.209884 15.169271,-0.325517 6.091692,5.700463 5.007777,15.508358 -0.71615,21.028645 -7.629094,7.357675 -20.0218,5.821087 -26.888021,-1.757818 -8.640439,-9.537277 -6.642515,-24.54653 2.799486,-32.747395 11.435529,-9.932347 29.077648,-7.468673 38.606771,3.841154 11.229741,13.328239 8.297802,33.61275 -4.882822,44.466145 -15.217553,12.530674 -38.150514,9.128916 -50.32552,-5.92449 -13.8340161,-17.104636 -9.9614157,-42.690144 6.966157,-56.184895 18.990179,-15.1390701 47.231137,-10.7949193 62.04427,8.007826 16.445385,20.874611 11.629176,51.773152 -9.049493,67.903644")
 					.attr("fill-opacity","0")
+					;
+			}
+			/* These avatars are diamonds */
+			for (var i = NUMCIRCLES/3; i < 2/3*NUMCIRCLES; i++ ) {			
+				svg.append("g")
+					.attr("class","theFrames")
+					.append("path")
 					.attr("class","spirals")
-			}
+					.attr("stroke","white")
+					.attr("stroke-width",3)
+					.attr("d","M " + orbStartX[i] + " " + orbStartY[i] + " m 0,-50 l 50,50 -50,50 -50,-50 z ")
+					.attr("fill-opacity","0")
+					;
 
-			console.log(event);
-		}); /* end of the stuff that runs after the DOM is loaded */
-
-		
-		/* Got this shuffle routine from stackexchange */
-		function shuffleArray(array) {
-			for (let i = array.length - 1; i > 0; i--) {
-				let j = Math.floor(Math.random() * (i + 1));
-				let temp = array[i];
-				array[i] = array[j];
-				array[j] = temp;
 			}
-			return array;
-		}
+			/* These avatars are sigmas */
+			for (var i = 2/3*NUMCIRCLES; i < NUMCIRCLES; i++ ) {			
+				svg.append("g")
+				.attr("class","theFrames")
+					.append("path")
+					.attr("class","spirals")
+					.attr("stroke","white")
+					.attr("stroke-width",3)
+					.attr("d","M " + orbStartX[i] + " " + orbStartY[i] + "m 25,-25 l 0,-10 -50,0 35,35 -35,35 50,0 0,-10")
+					.attr("fill-opacity","0")
+					;
+
+			}
 			
+			
+			console.log(event);
+		}); /* end of the setup and initial view, which happens after the DOM is loaded */
+
+
+
 		function moveThem() {
-		/* I only want this to run once, so remove the listener from the button */
+		/* I only want this to run once, so remove the trigger from the screen and DOM.  Then move the orbs around */
+			removeTrigger();
+			animateOrbs();
 
-			var oldButton = document.getElementById("theTrigger");
-			oldButton
-				.removeAttribute("onclick")
-				;
-		
-		/* Now remove the trigger circle with an animation */
-			var button = d3.select("#theTrigger");
-			button
-				.transition("removeButton")
-				.duration(5000)
-				.attr("r",0)
-				.attrTween("transform",function(d,i,a){return d3.interpolateString("rotate(0)","rotate(360)")})
-				.remove()
-			;
-
-			var orbs    = d3.select("#theWorld").selectAll(".orbs");
-		/* Shift the color of the orbs */
-			orbs
-				.transition("colorShift")
-				.duration(function(d,i){return 2000+8000*Math.random()})
-				.attr("fill","red")
-				;
-		/* Shift the size of the orbs */
-			orbs
-				.transition("shrinkOrbs")
-				.duration(function(d,i){return 2000+8000*Math.random()})
-				.attr("r",20)
-				.transition("growOrbs")
-				.duration(2000)
-				.attr("r",50)
-				;
-		/* Shift the position of the orbs and spirals*/
-			orbs
-				.transition("rotateOrbs")
-				.duration(function(d,i){return 2000+8000*Math.random()})
-				.attrTween("transform",function(d,i,a){return d3.interpolateString("rotate(0)","rotate(-360)")})
-				;
-		/* Now shift the color back */
-			orbs
-				.transition("delayOnly")
-				.duration(11000)
-				.transition("recolorOrbs")
-				.duration(2000)
-				.attr("fill","steelblue")
-				.transition("fadeOut")
-				.duration(2000)
-				/*.attrTween("stroke",function(d) {return d3.interpolateString("white","steelblue")}) */
-				/*.attr("stroke-dasharray",function(d) {return d3.interpolateString("10,3","0,0")}) */
-				.attrTween("fill-opacity",function(d) {return d3.interpolateNumber(1,0)})				
-				.attrTween("opacity",function(d) {return d3.interpolateNumber(1,0)})
-				.remove()
-				;
-
-				
 			var myFrames = d3.select("#theWorld").selectAll(".theFrames");
 			myFrames
 				.transition("rotateFrames")
@@ -194,13 +167,19 @@
 					if (spiralCounter==NUMCIRCLES) {
 						var spirals = d3.select("#theWorld").selectAll(".spirals");
 						spirals
-							.transition()
+							.transition("reorientSymbols")
 							.duration(2000)
 							.attrTween("transform",function(d,i){return d3.interpolateString("rotate(0,"+orbStartX[i]+","+orbStartY[i]+")","rotate("+(-1*+(orbAnglesDiff[i]))+","+orbStartX[i]+","+orbStartY[i]+")")})
 							;
+					
+					
+					
+					
 					}
 					}
 				)
+
+
 				;
 		}
 
