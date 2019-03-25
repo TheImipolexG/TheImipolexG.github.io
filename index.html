@@ -35,7 +35,7 @@
 		var orbAnglesDiff = [];
 		for (var i=0; i<NUMCIRCLES ; i++) {
 			orbAnglesDiff.push((orbAnglesEnd[i]-orbAnglesStart[i])/Math.PI*180); /*in degrees */ 
-		}
+			}
 
 		/* Calculate initial x,y positions for the orbs and the avatars */
 		/* Usually the Sin and Cos are reversed, but I want the first element at the top so adding pi/2 for a quarter turn.  Need the -1 on the y axis because y axis is upside down from "usual" convention in an svg space */
@@ -107,7 +107,7 @@
 				I can rotate the group and then rotate the symbols without needing to keep track of different centers
 				of rotation, etc. */
 			
-			/* These avatars are spirals */
+			/* These avatars are spirals
 			for (var i = 0; i < NUMCIRCLES/3; i++ ) {
 				svg.append("g")
 					.attr("class","theFrames")
@@ -119,6 +119,21 @@
 					.attr("fill-opacity","0")
 					;
 			}
+			*/
+			
+			/* These avatars are compasses */
+			for (var i = 0; i < NUMCIRCLES/3; i++ ) {
+				svg.append("g")
+					.attr("class","theFrames")
+					.append("path")
+					.attr("class","spirals")
+					.attr("stroke","white")
+					.attr("stroke-width",3)
+					.attr("d","M " + orbStartX[i] + " " + orbStartY[i] + "m -35,0 a 10,10,0,0,0,70,0 a 10,10,0,0,0,-70,0 m 25,-15 l 10,-10 10,10 m -10,-10 l 0,30")
+					.attr("fill-opacity","0")
+					;
+			}			
+			
 			/* These avatars are diamonds */
 			for (var i = NUMCIRCLES/3; i < 2/3*NUMCIRCLES; i++ ) {			
 				svg.append("g")
@@ -127,7 +142,7 @@
 					.attr("class","spirals")
 					.attr("stroke","white")
 					.attr("stroke-width",3)
-					.attr("d","M " + orbStartX[i] + " " + orbStartY[i] + " m 0,-50 l 50,50 -50,50 -50,-50 z ")
+					.attr("d","M " + orbStartX[i] + " " + orbStartY[i] + "m -4,-35 l 2,-2 4,0 2,2 0,62 -2,2 -4,0 -2,-2 z M " + orbStartX[i] + " " + orbStartY[i] + " m -6,35 a 6,6,0,0,0,12,0 a 6,6,0,0,0,-12,0 M " + orbStartX[i] + " " + orbStartY[i] + " m -4,-25 l 4,0 m -4,10 l4,0 m -4,10 l4,0 m -4,10 l4,0 m -4,10 l4,0")
 					.attr("fill-opacity","0")
 					;
 
