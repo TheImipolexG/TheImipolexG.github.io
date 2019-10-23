@@ -122,45 +122,61 @@
 			*/
 			
 			/* These avatars are compasses */
-			for (var i = 0; i < NUMCIRCLES/3; i++ ) {
+			for (var i = 0; i < NUMCIRCLES/4; i++ ) {
 				svg.append("g")
 					.attr("class","theFrames")
 					.append("path")
 					.attr("class","spirals")
 					.attr("stroke","white")
 					.attr("stroke-width",3)
+					.attr("stroke-linejoin","bevel")
 					.attr("d","M " + orbStartX[i] + " " + orbStartY[i] + "m -35,0 a 10,10,0,0,0,70,0 a 10,10,0,0,0,-70,0 m 25,-15 l 10,-10 10,10 m -10,-10 l 0,30")
 					.attr("fill-opacity","0")
 					;
 			}			
 			
-			/* These avatars are diamonds */
-			for (var i = NUMCIRCLES/3; i < 2/3*NUMCIRCLES; i++ ) {			
+			/* These avatars are thermometers */
+			for (var i = NUMCIRCLES/4; i < 2/4*NUMCIRCLES; i++ ) {			
 				svg.append("g")
 					.attr("class","theFrames")
 					.append("path")
 					.attr("class","spirals")
 					.attr("stroke","white")
 					.attr("stroke-width",3)
+					.attr("stroke-linejoin","bevel")
 					.attr("d","M " + orbStartX[i] + " " + orbStartY[i] + "m -4,-35 l 2,-2 4,0 2,2 0,62 -2,2 -4,0 -2,-2 z M " + orbStartX[i] + " " + orbStartY[i] + " m -6,35 a 6,6,0,0,0,12,0 a 6,6,0,0,0,-12,0 M " + orbStartX[i] + " " + orbStartY[i] + " m -4,-25 l 4,0 m -4,10 l4,0 m -4,10 l4,0 m -4,10 l4,0 m -4,10 l4,0")
 					.attr("fill-opacity","0")
 					;
 
 			}
 			/* These avatars are sigmas */
-			for (var i = 2/3*NUMCIRCLES; i < NUMCIRCLES; i++ ) {			
+			for (var i = 2/4*NUMCIRCLES; i < 3/4*NUMCIRCLES; i++  ) {			
 				svg.append("g")
 				.attr("class","theFrames")
 					.append("path")
 					.attr("class","spirals")
 					.attr("stroke","white")
 					.attr("stroke-width",3)
+					.attr("stroke-linejoin","bevel")
 					.attr("d","M " + orbStartX[i] + " " + orbStartY[i] + "m 25,-25 l 0,-10 -50,0 35,35 -35,35 50,0 0,-10")
 					.attr("fill-opacity","0")
 					;
 
 			}
-			
+			/* These avatars are cubes */
+			for (var i = 3/4*NUMCIRCLES; i < NUMCIRCLES; i++ ) {			
+				svg.append("g")
+				.attr("class","theFrames")
+					.append("path")
+					.attr("class","spirals")
+					.attr("stroke","white")
+					.attr("stroke-width",3)
+					.attr("stroke-linejoin","bevel")
+					.attr("d","M " + orbStartX[i] + " " + orbStartY[i] + "m -30,-10 h 40 v 40 h -40 v -40 m 20,-20 h 40 v 40 h -40 v -40 l -20,20 m 40,0 l 20,-20 m 0,40 l -20,20 m -40,0 l 20,-20")
+					.attr("fill-opacity","0")
+					;
+
+			}
 			
 			console.log(event);
 		}); /* end of the setup and initial view, which happens after the DOM is loaded */
